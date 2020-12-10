@@ -1,0 +1,10 @@
+#!/bin/bash
+
+trap 'echo "#[fg=red]n/a"; exit 1' ERR
+
+#false
+
+RUNNING_VMs=$(pgrep vmware-vmx | wc -l | tr -d ' ')
+TOTAL_VMs=$(find "/Users/mbentley/Documents/Virtual Machines.localized" -name "*.vmwarevm" -maxdepth 1 -exec basename {} \; | wc -l | tr -d ' ')
+
+echo "#[fg=green]${RUNNING_VMs}#[fg=yellow]/#[fg=brightblue]${TOTAL_VMs}"
