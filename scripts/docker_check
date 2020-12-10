@@ -1,0 +1,32 @@
+#!/bin/bash
+
+# trap errors; output n/a
+trap 'echo "#[fg=red]n/a"; exit 1' ERR
+
+# this is to suspend this script
+#false
+
+# check to see if the docker daemon is responding on the /_ping endpoint
+if [ "$(curl -s -m .25 --unix-socket /var/run/docker.sock http://v1.30/_ping 2>/dev/null)" = "OK" ]
+then
+  # get a list of all containers
+  CONTAINERS=$(curl -s -m 1 --unix-socket /var/run/docker.sock http://v1.30/containers/json?all=true | jq -r '.[]| "\(.Id) \(.State)"' 2>/dev/null)
+
+  # check and see which ones are running
+  RUNNING_CONTAINERS="$(echo "${CONTAINERS}" | grep -c running || true)"
+
+  # get a total of all containers
+  TOTAL_CONTAINERS="$(echo "${CONTAINERS}" | grep -c ' ' || true)"
+
+  # get a count of all of the volumes
+  VOLUMES=$(curl -s -m 1 --unix-socket /var/run/docker.sock http://v1.30/volumes | jq -r '.Volumes|.[].Name' | grep -c ^ || true)
+
+  # get a count of all of the volumes
+  IN_USE_VOLUMES=$(curl -s -m 1 --unix-socket /var/run/docker.sock http://v1.30/volumes?filters=%7B%22dangling%22%3A%7B%22false%22%3Atrue%7D%7D | jq -r '.Volumes|.[].Name' | grep -c ^ || true)
+
+  # output proper data w/color
+  echo "#[fg=yellow]c #[fg=green]${RUNNING_CONTAINERS}#[fg=yellow]/#[fg=brightblue]${TOTAL_CONTAINERS} #[fg=yellow]v #[fg=green]${IN_USE_VOLUMES}#[fg=yellow]/#[fg=brightblue]${VOLUMES}"
+else
+  # send error to return proper data w/color
+  false
+fi
