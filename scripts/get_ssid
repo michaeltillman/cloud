@@ -1,0 +1,25 @@
+#!/bin/bash
+
+# trap errors
+trap 'echo "#[fg=red]n/a"; exit 1' ERR
+
+# get SSID
+SSID="$(/System/Library/PrivateFrameworks/Apple80211.framework/Resources/airport -I | grep ' SSID:' | awk -F ': ' '{print $2}')"
+
+# check to see if SSID is empty
+if [ -z "${SSID}" ]
+then
+  # no SSID returned; return error
+  false
+fi
+
+# save SSID in lower case
+LOWER_SSID="$(echo "${SSID}" | tr '[:upper:]' '[:lower:]')"
+
+# check to see if we are on an...undesirable network
+if [ "${LOWER_SSID}" = "xfinitywifi" ] || [ "${LOWER_SSID}" = "XFINITY" ] || [ "${LOWER_SSID}" = "CableWiFi" ]
+then
+  echo "#[fg=red]${SSID}"
+else
+  echo "${SSID}"
+fi
